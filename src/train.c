@@ -72,7 +72,7 @@ void train_parallelized(brain_t *brain, dataset_t training, int epochs,
     time_t end;
     double loss;
 
-    printf("Starting Training...\n");
+    printf("✨ Starting Training...\n");
     start = time(NULL);
 
     for (int epoch = 0; epoch < epochs; epoch++) {
@@ -133,6 +133,6 @@ void train(brain_t *brain, dataset_t training, int epochs,
     }
     end = time(NULL);
     printf(
-        "Finished Training !\n Training time: %ld seconds\nFinal loss: %f \n",
+        "🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: %f \n",
         end - start, loss / training.nb_samples);
 }

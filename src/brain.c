@@ -121,7 +121,7 @@ void save_brain(brain_t *brain, const char *filename)
         }
     }
     fclose(file);
-    printf("Model saved to %s\n", filename);
+    printf("💾 Model saved to %s\n", filename);
 }
 
 brain_t *load_brain(const char *filename, schema_t schema)
@@ -145,6 +145,6 @@ brain_t *load_brain(const char *filename, schema_t schema)
         }
     }
     fclose(file);
-    printf("Model loaded from %s\n", filename);
+    printf("💾 Model loaded from %s\n", filename);
     return brain;
 }

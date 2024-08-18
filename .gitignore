@@ -4,3 +4,4 @@ kettle.json
 *.so
 example/
 .DS_Store
+todo.md
