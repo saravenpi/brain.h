@@ -1,0 +1,6 @@
+*.o
+.clangd
+kettle.json
+*.so
+example/
+.DS_Store
