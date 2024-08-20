@@ -9,7 +9,18 @@ neuron_t *create_neuron(size_t nb_inputs, activation_function_t activation)
         exit(EXIT_FAILURE);
     }
     neuron->w = (double *)malloc(nb_inputs * sizeof(double));
+	if (!neuron->w) {
+		free(neuron);
+        perror("Failed to allocate memory for neuron");
+        exit(EXIT_FAILURE);
+	}
     neuron->dw = (double *)malloc(nb_inputs * sizeof(double));
+	if (!neuron->dw) {
+		free(neuron->w);
+		free(neuron);
+        perror("Failed to allocate memory for neuron");
+        exit(EXIT_FAILURE);
+	}
     neuron->nb_w = nb_inputs;
     neuron->bias = 0.0;
     neuron->db = 0.0;
@@ -30,6 +41,7 @@ layer_t *create_layer(size_t nb_neurons, size_t nb_inputs_per_neuron,
     }
     layer->neurons = (neuron_t **)malloc(nb_neurons * sizeof(neuron_t *));
     if (!layer->neurons) {
+		free(layer);
         perror("Failed to allocate memory for neurons array");
         exit(EXIT_FAILURE);
     }
@@ -51,6 +63,7 @@ brain_t *create_brain(schema_t schema)
     printf("🧠 Creating brain with %zu layers\n", schema.nb_layers);
     brain->layers = (layer_t **)malloc(schema.nb_layers * sizeof(layer_t *));
     if (!brain->layers) {
+		free(brain);
         perror("Failed to allocate memory for layers array");
         exit(EXIT_FAILURE);
     }
