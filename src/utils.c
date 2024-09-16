@@ -1,3 +1,9 @@
+/*
+* Made by saravenpi 2024
+* project: brain.h
+* file: utils.c
+*/
+
 #include "brain.h"
 
 double sigmoid(double x)

@@ -1,6 +1,14 @@
+/*
+* Made by saravenpi 2024
+* project: brain.h
+* file: train.c
+*/
+
 #include "brain.h"
 #include <pthread.h>
 #include <time.h>
+
+void append_str_to_file(char *str, char *path);
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -15,7 +23,8 @@ void update_loss(double *loss, brain_t *brain, double *expected)
     }
 }
 
-void display_log(double loss, size_t epoch, time_t start, int epochs)
+void display_log(double loss, size_t epoch, time_t start, int epochs,
+    char *training_log_file)
 {
     time_t now = time(NULL);
     int time_elapsed = difftime(now, start);
@@ -23,11 +32,16 @@ void display_log(double loss, size_t epoch, time_t start, int epochs)
     int remaining_hours = remaining_time / 3600;
     int remaining_minutes = (remaining_time % 3600) / 60;
     int remaining_seconds = remaining_time % 60;
+    char log_line[512];
 
+    sprintf(log_line, "%zu %f\n", epoch, loss);
     printf(
         "Epoch %zu, Time: %ld seconds, Loss: %f, ", epoch, now - start, loss);
     printf("Remaining time: %d hours %d minutes %d seconds\n", remaining_hours,
         remaining_minutes, remaining_seconds);
+    if (training_log_file != NULL) {
+        append_str_to_file(log_line, training_log_file);
+    }
 }
 
 void collect_predictions(
@@ -35,8 +49,7 @@ void collect_predictions(
 {
     layer_t *output_layer = brain->layers[brain->nb_layers - 1];
 
-    for (size_t neuron_i = 0; neuron_i < output_layer->nb_neurons;
-         neuron_i++)
+    for (size_t neuron_i = 0; neuron_i < output_layer->nb_neurons; neuron_i++)
         predictions[neuron_i] = output_layer->neurons[neuron_i]->output;
 }
 
@@ -65,8 +78,7 @@ void *train_thread(void *arg)
     return NULL;
 }
 
-void train_parallelized(brain_t *brain, dataset_t training, int epochs,
-    double learning_rate, double epsilon, int max_cpu_threads)
+void train_parallelized(brain_t *brain, training_settings_t settings)
 {
     time_t start;
     time_t end;
@@ -75,41 +87,42 @@ void train_parallelized(brain_t *brain, dataset_t training, int epochs,
     printf("✨ Starting Training...\n");
     start = time(NULL);
 
-    for (int epoch = 0; epoch < epochs; epoch++) {
+    for (int epoch = 0; epoch < settings.epochs; epoch++) {
         loss = 0.0;
-        pthread_t threads[max_cpu_threads];
-        thread_data_t thread_data[max_cpu_threads];
+        pthread_t threads[settings.max_cpu_threads];
+        thread_data_t thread_data[settings.max_cpu_threads];
 
-        int samples_per_thread = training.nb_samples / max_cpu_threads;
+        int samples_per_thread =
+            settings.dataset->nb_samples / settings.max_cpu_threads;
 
-        for (int t = 0; t < max_cpu_threads; t++) {
+        for (int t = 0; t < settings.max_cpu_threads; t++) {
             thread_data[t].brain = brain;
-            thread_data[t].training = training;
+            thread_data[t].training = *settings.dataset;
             thread_data[t].start_sample = t * samples_per_thread;
-            thread_data[t].end_sample = (t == max_cpu_threads - 1)
-                                            ? training.nb_samples
+            thread_data[t].end_sample = (t == settings.max_cpu_threads - 1)
+                                            ? settings.dataset->nb_samples
                                             : (t + 1) * samples_per_thread;
-            thread_data[t].learning_rate = learning_rate;
-            thread_data[t].epsilon = epsilon;
+            thread_data[t].learning_rate = settings.learning_rate;
+            thread_data[t].epsilon = settings.epsilon;
             thread_data[t].loss = &loss;
             pthread_create(
                 &threads[t], NULL, train_thread, (void *)&thread_data[t]);
         }
-        for (int t = 0; t < max_cpu_threads; t++) {
+        for (int t = 0; t < settings.max_cpu_threads; t++) {
             pthread_join(threads[t], NULL);
         }
-        if (loss / training.nb_samples < epsilon)
+        if (loss / settings.dataset->nb_samples < settings.epsilon)
             break;
-        display_log(loss / training.nb_samples, epoch, start, epochs);
+        display_log(loss / settings.dataset->nb_samples, epoch, start,
+            settings.epochs, settings.training_log_file);
     }
     end = time(NULL);
-    printf(
-        "🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: %f \n",
-        end - start, loss / training.nb_samples);
+    printf("🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: "
+           "%f \n",
+        end - start, loss / settings.dataset->nb_samples);
 }
 
-void train(brain_t *brain, dataset_t training, int epochs,
-    double learning_rate, double epsilon)
+void train(brain_t *brain, training_settings_t settings)
 {
     double *predictions;
     time_t start;
@@ -118,21 +131,25 @@ void train(brain_t *brain, dataset_t training, int epochs,
 
     printf("✨ Starting Training...\n");
     start = time(NULL);
-    for (int epoch = 0; epoch < epochs; epoch++) {
+    for (int epoch = 0; epoch < settings.epochs; epoch++) {
         loss = 0.0;
-        for (size_t sample_i = 0; sample_i < training.nb_samples; sample_i++) {
-            predictions = feedforward(brain, training.samples[sample_i].input);
-            update_loss(&loss, brain, training.samples[sample_i].output);
+        for (size_t sample_i = 0; sample_i < settings.dataset->nb_samples;
+             sample_i++) {
+            predictions =
+                feedforward(brain, settings.dataset->samples[sample_i].input);
+            update_loss(
+                &loss, brain, settings.dataset->samples[sample_i].output);
             backpropagate(brain, predictions,
-                training.samples[sample_i].output, epsilon);
-            update_weights(brain, learning_rate);
+                settings.dataset->samples[sample_i].output, settings.epsilon);
+            update_weights(brain, settings.learning_rate);
         }
-        if (loss / training.nb_samples < epsilon)
+        if (loss / settings.dataset->nb_samples < settings.epsilon)
             break;
-        display_log(loss / training.nb_samples, epoch, start, epochs);
+        display_log(loss / settings.dataset->nb_samples, epoch, start,
+            settings.epochs, settings.training_log_file);
     }
     end = time(NULL);
-    printf(
-        "🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: %f \n",
-        end - start, loss / training.nb_samples);
+    printf("🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: "
+           "%f \n",
+        end - start, loss / settings.dataset->nb_samples);
 }

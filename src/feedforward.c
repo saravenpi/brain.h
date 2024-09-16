@@ -1,3 +1,9 @@
+/*
+* Made by saravenpi 2024
+* project: brain.h
+* file: feedforward.c
+*/
+
 #include "brain.h"
 
 void update_neuron(layer_t *prev_layer, neuron_t *neuron)

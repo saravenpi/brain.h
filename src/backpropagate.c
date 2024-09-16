@@ -1,3 +1,9 @@
+/*
+* Made by saravenpi 2024
+* project: brain.h
+* file: backpropagate.c
+*/
+
 #include "brain.h"
 
 void update_weights(brain_t *brain, double learning_rate)

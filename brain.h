@@ -1,3 +1,9 @@
+/*
+ * Made by saravenpi 2024
+ * project: brain.h
+ * file: brain.h
+ */
+
 #pragma once
 #include <math.h>
 #include <stdio.h>
@@ -62,9 +68,10 @@ typedef struct thread_data_s thread_data_t;
 
 struct training_settings_s {
     double epsilon;
-    double learning_rate;
     int epochs;
     int max_cpu_threads;
+    double learning_rate;
+    dataset_t *dataset;
     char *training_log_file;
 };
 typedef struct training_settings_s training_settings_t;
@@ -82,10 +89,8 @@ void update_weights(brain_t *brain, double learning_rate);
 void backpropagate(
     brain_t *brain, double *predictions, double *expected, double epsilon);
 
-void train(brain_t *brain, dataset_t training, int epochs,
-    double learning_rate, double epsilon);
-void train_parallelized(brain_t *brain, dataset_t training, int epochs,
-    double learning_rate, double epsilon, int max_cpu_threads);
+void train(brain_t *brain, training_settings_t settings);
+void train_parallelized(brain_t *brain, training_settings_t settings);
 
 void save_brain(brain_t *brain, const char *filename);
 brain_t *load_brain(const char *filename, schema_t schema);

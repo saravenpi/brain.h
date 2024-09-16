@@ -1,8 +1,18 @@
+#
+# Made by saravenpi 2024
+# project: brain.h
+# file: brain.h
+#
+
 CC = gcc
 CFLAGS = -Wall -Werror -I.
 
-SRC_DIR = src
-LIB_SRCS := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c)
+LIB_SRCS := src/backpropagate.c \
+			src/brain.c \
+			src/feedforward.c \
+			src/file.c \
+			src/train.c \
+			src/utils.c
 
 LIB_OBJS = $(LIB_SRCS:.c=.o)
 LIB_NAME = libbrain.so
