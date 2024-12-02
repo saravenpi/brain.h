@@ -5,3 +5,4 @@ kettle.json
 example/
 .DS_Store
 todo.md
+*.log
