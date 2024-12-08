@@ -62,6 +62,8 @@ brain_t *create_brain(schema_t schema)
     brain_t *brain = (brain_t *)malloc(sizeof(brain_t));
     size_t nb_inputs;
 
+    srand(time(NULL));
+
     if (!brain) {
         perror("Failed to allocate memory for brain");
         exit(EXIT_FAILURE);
@@ -76,7 +78,7 @@ brain_t *create_brain(schema_t schema)
     brain->nb_layers = schema.nb_layers;
     for (size_t i = 0; i < schema.nb_layers; i++) {
         nb_inputs = (i == 0) ? 0 : schema.layers[i - 1];
-        brain->layers[i] = create_layer(schema.layers[i], nb_inputs, sigmoid);
+        brain->layers[i] = create_layer(schema.layers[i], nb_inputs, schema.activation);
     }
     printf("🧠 Brain created\n");
     return brain;

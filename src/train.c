@@ -29,6 +29,7 @@ void display_log(double loss, size_t epoch, time_t start, int epochs,
     time_t now = time(NULL);
     int time_elapsed = difftime(now, start);
     int remaining_time = time_elapsed * (epochs - epoch) / epoch;
+
     int remaining_hours = remaining_time / 3600;
     int remaining_minutes = (remaining_time % 3600) / 60;
     int remaining_seconds = remaining_time % 60;
@@ -63,6 +64,7 @@ void *train_thread(void *arg)
     double learning_rate = data->learning_rate;
     double epsilon = data->epsilon;
     double local_loss = 0.0;
+    pthread_t thread_id = pthread_self();
 
     for (int i = start_sample; i < end_sample; i++) {
         double *predictions = feedforward(brain, training.samples[i].input);
@@ -72,6 +74,7 @@ void *train_thread(void *arg)
         backpropagate(brain, predictions, training.samples[i].output, epsilon);
         update_weights(brain, learning_rate);
     }
+    printf("[Thread %lu] Finished Training Loop\n", thread_id);
     pthread_mutex_lock(&mutex);
     *data->loss += local_loss;
     pthread_mutex_unlock(&mutex);
@@ -84,9 +87,8 @@ void train_parallelized(brain_t *brain, training_settings_t settings)
     time_t end;
     double loss;
 
-    printf("✨ Starting Training...\n");
+    printf("✨ Starting Parallelized Training...\n");
     start = time(NULL);
-
     for (int epoch = 0; epoch < settings.epochs; epoch++) {
         loss = 0.0;
         pthread_t threads[settings.max_cpu_threads];
@@ -113,7 +115,7 @@ void train_parallelized(brain_t *brain, training_settings_t settings)
         }
         if (loss / settings.dataset->nb_samples < settings.epsilon)
             break;
-        display_log(loss / settings.dataset->nb_samples, epoch, start,
+        display_log(loss / settings.dataset->nb_samples, epoch + 1, start,
             settings.epochs, settings.training_log_file);
     }
     end = time(NULL);
@@ -145,11 +147,12 @@ void train(brain_t *brain, training_settings_t settings)
         }
         if (loss / settings.dataset->nb_samples < settings.epsilon)
             break;
-        display_log(loss / settings.dataset->nb_samples, epoch, start,
+        display_log(loss / settings.dataset->nb_samples, epoch + 1, start,
             settings.epochs, settings.training_log_file);
     }
     end = time(NULL);
     printf("🎉 Finished Training !\n Training time: %ld seconds\nFinal loss: "
            "%f \n",
         end - start, loss / settings.dataset->nb_samples);
+    printf("📄 Training logs are saved in %s\n", settings.training_log_file);
 }

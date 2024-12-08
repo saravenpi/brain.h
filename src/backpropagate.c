@@ -33,7 +33,12 @@ void calculate_output_layer_error_and_delta(
          neuron_i++) {
         neuron = output_layer->neurons[neuron_i];
         error = expected[neuron_i] - predictions[neuron_i];
-        neuron->delta = error * sigmoid_derivative(neuron->output);
+        if (neuron->activation == sigmoid)
+            neuron->delta = error * sigmoid_derivative(neuron->output);
+        else if (neuron->activation == relu)
+            neuron->delta = error * relu_derivative(neuron->output);
+        else if (neuron->activation == leaky_relu)
+            neuron->delta = error * leaky_relu_derivative(neuron->output);
     }
 }
 
@@ -57,7 +62,12 @@ void calculate_hidden_errors_and_deltas(
                 next_neuron = next_layer->neurons[next_neuron_i];
                 error += next_neuron->delta * next_neuron->w[neuron_i];
             }
-            neuron->delta = error * sigmoid_derivative(neuron->output);
+            if (neuron->activation == sigmoid)
+                neuron->delta = error * sigmoid_derivative(neuron->output);
+            else if (neuron->activation == relu)
+                neuron->delta = error * relu_derivative(neuron->output);
+            else if (neuron->activation == leaky_relu)
+                neuron->delta = error * leaky_relu_derivative(neuron->output);
         }
     }
 }

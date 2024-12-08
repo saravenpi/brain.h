@@ -20,7 +20,7 @@ LIB_NAME = libbrain.so
 all: $(LIB_NAME)
 
 $(LIB_NAME): $(LIB_OBJS)
-	$(CC) -shared -o $@ $^
+	$(CC) -shared -o $@ $^ -lm
 
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@

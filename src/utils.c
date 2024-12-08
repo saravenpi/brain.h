@@ -38,6 +38,5 @@ double leaky_relu_derivative(double x)
 
 double rand_double(void)
 {
-    srand(time(0));
-    return (double)rand() / RAND_MAX;
+    return ((double)rand() / RAND_MAX) * 2 - 1;
 }
